@@ -3,12 +3,13 @@ import base64
 import tempfile
 import os
 import numpy as np
+import uvicorn
 
 # from models import PDFRequest
 # from utils.pdf_processor import process_pdf
-from app.models import PDFRequest
-from app.utils.pdf_processer import process_pdf
-from app.utils.transaction_extractor import extract_transactions
+from models import PDFRequest
+from utils.pdf_processer import process_pdf
+from utils.transaction_extractor import extract_transactions
 app = FastAPI()
 
 
@@ -81,3 +82,10 @@ async def pdf_to_csv(request: PDFRequest):
             status_code=500,
             detail=str(e)
         )
+if __name__ == "__main__":
+    uvicorn.run(
+        "main:app",      # filename:app_instance
+        host="0.0.0.0",
+        port=8000,
+        reload=True
+    )        
