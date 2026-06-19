@@ -1,7 +1,7 @@
 import pdfplumber
 from app.utils.text_cleaner import clean_text
 from app.utils.key_value_extractor import extract_kv_from_line
-
+from app.utils.transaction_extractor import extract_transactions
 
 def process_pdf(pdf_path: str):
     table_data = []
