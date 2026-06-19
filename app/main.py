@@ -8,7 +8,7 @@ import numpy as np
 # from utils.pdf_processor import process_pdf
 from app.models import PDFRequest
 from app.utils.pdf_processer import process_pdf
-
+from app.utils.transaction_extractor import extract_transactions
 app = FastAPI()
 
 
@@ -22,44 +22,62 @@ async def pdf_to_csv(request: PDFRequest):
             temp_pdf.write(pdf_bytes)
             pdf_path = temp_pdf.name
 
+        # Existing extraction
         table_data, outside_data = process_pdf(pdf_path)
+
+        # HDFC transaction extraction
+        transaction_data = extract_transactions(pdf_path)
 
         os.remove(pdf_path)
 
-        if not table_data:
-            raise HTTPException(status_code=404, detail="No table found")
+        if not table_data and not transaction_data:
+            raise HTTPException(
+                status_code=404,
+                detail="No data found in PDF"
+            )
 
         # ----------------------------
         # TABLE → JSON
         # ----------------------------
-        rows = [r for r in table_data if isinstance(r, list)]
-
-        headers = rows[0]
-        data_rows = rows[1:]
-
         json_data = []
 
-        for row in data_rows:
+        if table_data:
 
-            obj = {}
+            rows = [r for r in table_data if isinstance(r, list)]
 
-            for i, col in enumerate(headers):
-                obj[col] = row[i] if i < len(row) else ""
+            if rows:
 
-            json_data.append(obj)
+                headers = rows[0]
+                data_rows = rows[1:]
 
-        # clean NaN
-        for r in json_data:
-            for k, v in r.items():
-                if v is None or (isinstance(v, float) and np.isnan(v)):
-                    r[k] = ""
+                for row in data_rows:
+
+                    obj = {}
+
+                    for i, col in enumerate(headers):
+                        obj[col] = row[i] if i < len(row) else ""
+
+                    json_data.append(obj)
+
+                # Clean NaN values
+                for r in json_data:
+                    for k, v in r.items():
+                        if v is None or (
+                            isinstance(v, float)
+                            and np.isnan(v)
+                        ):
+                            r[k] = ""
 
         return {
             "status": "success",
             "file_name": request.file_name,
             "outside_data": outside_data,
-            "table_data": json_data
+            "table_data": json_data,
+            "transaction_data": transaction_data
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
