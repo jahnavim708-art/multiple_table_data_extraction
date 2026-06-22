@@ -9,7 +9,7 @@ import uvicorn
 # from utils.pdf_processor import process_pdf
 from models import PDFRequest
 from utils.pdf_processer import process_pdf
-from utils.transaction_extractor import extract_transactions
+from utils.hdfc_extractor import extract_transactions
 app = FastAPI()
 
 
