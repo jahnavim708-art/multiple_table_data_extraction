@@ -4,10 +4,8 @@ import tempfile
 import os
 import numpy as np
 
-# from models import PDFRequest
-# from utils.pdf_processor import process_pdf
 from app.models import PDFRequest
-from app.utils.pdf_processer import process_pdf
+from app.utils.hybrid_pdf_processor import process_hybrid_pdf
 
 app = FastAPI()
 
@@ -22,16 +20,16 @@ async def pdf_to_csv(request: PDFRequest):
             temp_pdf.write(pdf_bytes)
             pdf_path = temp_pdf.name
 
-        table_data, outside_data = process_pdf(pdf_path)
+        table_data, outside_data = process_hybrid_pdf(pdf_path)
 
         os.remove(pdf_path)
 
         if not table_data:
-            raise HTTPException(status_code=404, detail="No table found")
+            raise HTTPException(
+                status_code=404,
+                detail="No table found"
+            )
 
-        # ----------------------------
-        # TABLE → JSON
-        # ----------------------------
         rows = [r for r in table_data if isinstance(r, list)]
 
         headers = rows[0]
@@ -48,10 +46,11 @@ async def pdf_to_csv(request: PDFRequest):
 
             json_data.append(obj)
 
-        # clean NaN
         for r in json_data:
             for k, v in r.items():
-                if v is None or (isinstance(v, float) and np.isnan(v)):
+                if v is None or (
+                    isinstance(v, float) and np.isnan(v)
+                ):
                     r[k] = ""
 
         return {
@@ -62,4 +61,7 @@ async def pdf_to_csv(request: PDFRequest):
         }
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
