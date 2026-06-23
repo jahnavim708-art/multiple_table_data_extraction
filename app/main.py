@@ -5,11 +5,13 @@ import os
 import numpy as np
 import uvicorn
 
-# from models import PDFRequest
-# from utils.pdf_processor import process_pdf
 from models import PDFRequest
-from utils.pdf_processer import process_pdf
+from utils.hybrid_pdf_processor import process_hybrid_pdf
+
+
+from utils.pdf_processor import process_pdf
 from utils.hdfc_extractor import extract_transactions
+
 app = FastAPI()
 
 
@@ -23,23 +25,30 @@ async def pdf_to_csv(request: PDFRequest):
             temp_pdf.write(pdf_bytes)
             pdf_path = temp_pdf.name
 
-        # Existing extraction
-        table_data, outside_data = process_pdf(pdf_path)
+        # ============================
+        # Existing logic (UNCHANGED)
+        # ============================
+        table_data, outside_data = process_hybrid_pdf(pdf_path)
 
-        # HDFC transaction extraction
+        # ============================
+        # 
+        # ============================
         transaction_data = extract_transactions(pdf_path)
 
         os.remove(pdf_path)
 
+        # ============================
+        # EXISTING validation (unchanged)
+        # ============================
         if not table_data and not transaction_data:
             raise HTTPException(
                 status_code=404,
                 detail="No data found in PDF"
             )
 
-        # ----------------------------
-        # TABLE → JSON
-        # ----------------------------
+        # ============================
+        # TABLE → JSON (unchanged logic)
+        # ============================
         json_data = []
 
         if table_data:
@@ -82,10 +91,15 @@ async def pdf_to_csv(request: PDFRequest):
             status_code=500,
             detail=str(e)
         )
+
+
+# ============================
+# Nikhitha addition (entry point)
+# ============================
 if __name__ == "__main__":
     uvicorn.run(
-        "main:app",      # filename:app_instance
+        "main:app",
         host="0.0.0.0",
         port=8000,
         reload=True
-    )        
+    )
