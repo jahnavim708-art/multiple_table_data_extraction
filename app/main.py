@@ -24,73 +24,51 @@ async def pdf_to_csv(request: PDFRequest):
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf:
             temp_pdf.write(pdf_bytes)
             pdf_path = temp_pdf.name
+        # DEBUG
+        print("PDF Path:", pdf_path)
+        print("File Exists:", os.path.exists(pdf_path))
 
         # ============================
         # Existing logic (UNCHANGED)
         # ============================
         table_data, outside_data = process_hybrid_pdf(pdf_path)
-
+        print("After process_hybrid_pdf")
+        print("File Exists:", os.path.exists(pdf_path))
         # ============================
         # 
         # ============================
-        transaction_data = extract_transactions(pdf_path)
+        #transaction_data = extract_transactions(pdf_path)
 
-        os.remove(pdf_path)
+        
 
         # ============================
         # EXISTING validation (unchanged)
         # ============================
-        if not table_data and not transaction_data:
+        table_data = extract_transactions(pdf_path)
+
+        if not table_data:
             raise HTTPException(
                 status_code=404,
                 detail="No data found in PDF"
             )
 
-        # ============================
-        # TABLE → JSON (unchanged logic)
-        # ============================
-        json_data = []
-
-        if table_data:
-
-            rows = [r for r in table_data if isinstance(r, list)]
-
-            if rows:
-
-                headers = rows[0]
-                data_rows = rows[1:]
-
-                for row in data_rows:
-
-                    obj = {}
-
-                    for i, col in enumerate(headers):
-                        obj[col] = row[i] if i < len(row) else ""
-
-                    json_data.append(obj)
-
-                # Clean NaN values
-                for r in json_data:
-                    for k, v in r.items():
-                        if v is None or (
-                            isinstance(v, float)
-                            and np.isnan(v)
-                        ):
-                            r[k] = ""
 
         return {
             "status": "success",
             "file_name": request.file_name,
             "outside_data": outside_data,
-            "table_data": json_data,
-            "transaction_data": transaction_data
+            "table_data": table_data
         }
-
+        
     except Exception as e:
         raise HTTPException(
             status_code=500,
             detail=str(e)
         )
+    finally:
+
+        if pdf_path and os.path.exists(pdf_path):
+            os.remove(pdf_path)
 
 
 # ============================
