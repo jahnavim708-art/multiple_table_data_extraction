@@ -268,5 +268,35 @@ def extract_transactions(pdf_path):
                 ).strip()
 
             all_rows.append(current_row)
+    # ==========================================
+    # CLEAN DATA
+    # ==========================================
 
-    return all_rows
+    cleaned_rows = []
+
+    for row in all_rows:
+
+        clean_row = {}
+
+        for key, value in row.items():
+
+            if value is None:
+                value = ""
+
+            value = str(value)
+
+            # Remove newline characters
+            value = value.replace("\n", " ")
+
+            # Remove multiple spaces
+            value = re.sub(
+                r"\s+",
+                " ",
+                value
+            ).strip()
+
+            clean_row[key] = value
+
+        cleaned_rows.append(clean_row)
+
+    return cleaned_rows
