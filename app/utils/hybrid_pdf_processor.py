@@ -1,4 +1,4 @@
-from utils.pdf_processor import process_pdf
+from utils.pdf_processer import process_pdf
 from utils.table_validator import is_good_table
 
 from pdf_table_extractor.extractor import (
