@@ -9,7 +9,7 @@ from models import PDFRequest
 from utils.hybrid_pdf_processor import process_hybrid_pdf
 
 
-from utils.pdf_processor import process_pdf
+from utils.pdf_processer import process_pdf
 from utils.hdfc_extractor import extract_transactions
 
 app = FastAPI()
