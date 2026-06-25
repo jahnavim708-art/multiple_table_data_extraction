@@ -156,6 +156,21 @@ def extract_transactions(pdf_path):
                     k: v.strip()
                     for k, v in line_data.items()
                 }
+                for key in line_data:
+
+                    if line_data[key]:
+
+                        line_data[key] = (
+                        line_data[key]
+                        .replace("\n", " ")
+                        .replace("\r", " ")
+                    )
+
+                    line_data[key] = re.sub(
+                        r"\s+",
+                        " ",
+                        line_data[key]
+                    ).strip()
 
                 if not any(line_data.values()):
                     continue
